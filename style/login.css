@@ -186,7 +186,7 @@ label {
     margin-bottom: 0.5rem;
 }
 
-input[type="email"],
+input[type="username"],
 input[type="password"] {
     width: 100%;
     padding: 0.75rem;
