@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const authToken = getCookie('Authorization');
     console.log(authToken)
         // Kirim permintaan fetch dengan Authorization header
-    fetch('https://beaps-treamyracles-projects.vercel.app//rooms', {
+    fetch('https://beaps-treamyracles-projects.vercel.app/rooms', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

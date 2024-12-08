@@ -12,7 +12,8 @@
 
 <body>
     <nav>
-        <img class="logo" src="../assets/LOGO.png" alt="Logo FILKOMreserV" onclick="window.location.href='../index.html'" />
+        <img class="logo" src="../assets/LOGO.png" alt="Logo FILKOMreserV" onclick="location.reload();" />
+
         <ul class="nav__links">
             <li class="link"><a href="../index.html">Beranda</a></li>
             <li class="link"><a href="../index.html#booklet">Buku Panduan</a></li>
@@ -22,9 +23,9 @@
                     <i class="ri-notification-3-line" style="font-size: 1.5rem; margin-right: 5px"></i> Notifikasi
                 </a>
             </li>
-            <button class="btn" style="color: var(--white); background-color: var(--primary-color)" onclick="window.location.href='login.html'">
-          Login
-        </button>
+            <button id="authButton" class="btn" style="color: var(--white); background-color: var(--primary-color)">
+                Login
+            </button>
         </ul>
     </nav>
 
@@ -67,53 +68,99 @@
     <script>
         // Function to fetch notifications and display them
         function fetchNotifications() {
-            fetch("https://beaps-treamyracles-projects.vercel.app/notifications-with-name") // URL API untuk mengambil notifikasi
+            const authorizationToken = getCookie("Authorization"); // Mengambil token Authorization dari cookie
+
+            if (!authorizationToken) {
+                alert("Anda harus login terlebih dahulu.");
+                window.location.href = "login.html"; // Redirect ke halaman login jika tidak ada Authorization
+                return;
+            }
+
+            fetch("https://beaps-treamyracles-projects.vercel.app/notifications-with-name", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${authorizationToken}`, // Menambahkan header Authorization
+                    },
+                })
                 .then((response) => response.json())
                 .then((data) => {
                         const notifContainer = document.getElementById("notif-container");
                         notifContainer.innerHTML = ""; // Clear the container before adding new notifications
 
-                        data.forEach(notification => {
-                                    const notifCard = document.createElement('div');
-                                    notifCard.classList.add('notifikasi__card');
+                        data.forEach((notification) => {
+                                    const notifCard = document.createElement("div");
+                                    notifCard.classList.add("notifikasi__card");
 
                                     // Menentukan class dan judul berdasarkan status
-                                    if (notification.status === 'diterima') {
-                                        notifCard.classList.add('diterima');
+                                    if (notification.status === "diterima") {
+                                        notifCard.classList.add("diterima");
                                         notifCard.innerHTML = `
-            <h3>Peminjaman Diterima</h3>
-            <p>${notification.room_name}, ${notification.borrow_date}, ${notification.start_time} - ${notification.end_time}</p>
-            <p>Status: <span class="status-accepted">Diterima</span></p>
-            ${notification.file ? `<a href="${notification.file}" class="btn btn-success btn-sm ml-0" style="border-radius: 5px;" download>Download Berkas</a>` : ''}
-        `;
-    } else if (notification.status === 'proses') {
-        notifCard.classList.add('proses');
-        notifCard.innerHTML = `
-            <h3>Peminjaman Proses</h3>
-            <p>${notification.room_name}, ${notification.borrow_date}, ${notification.start_time} - ${notification.end_time}</p>
-            <p>Status: <span class="status-processing">Proses</span></p>
-        `;
-    } else if (notification.status === 'ditolak') {
-        notifCard.classList.add('ditolak');
-        notifCard.innerHTML = `
-            <h3>Peminjaman Ditolak</h3>
-            <p>${notification.room_name}, ${notification.borrow_date}, ${notification.start_time} - ${notification.end_time}</p>
-            <p>Status: <span class="status-rejected">Ditolak</span></p>
-            ${notification.file ? `<a href="${notification.file}" class="btn btn-danger btn-sm ml-0" style="border-radius: 5px;" download>Download Berkas</a>` : ''}
-        `;
-    }
-    
-    notifContainer.appendChild(notifCard);
-});
+                  <h3>Peminjaman Diterima</h3>
+                  <p>${notification.room_name}, ${notification.borrow_date}, ${notification.start_time} - ${notification.end_time}</p>
+                  <p>Status: <span class="status-accepted">Diterima</span></p>
+                  ${notification.file
+                                    ? `<a href="${notification.file}" class="btn btn-success btn-sm ml-0" style="border-radius: 5px;" download>Download Berkas</a>`
+                                    : ""
+                                }
+                `;
+                        } else if (notification.status === "proses") {
+                            notifCard.classList.add("proses");
+                            notifCard.innerHTML = `
+                  <h3>Peminjaman Proses</h3>
+                  <p>${notification.room_name}, ${notification.borrow_date}, ${notification.start_time} - ${notification.end_time}</p>
+                  <p>Status: <span class="status-processing">Proses</span></p>
+                `;
+                        } else if (notification.status === "ditolak") {
+                            notifCard.classList.add("ditolak");
+                            notifCard.innerHTML = `
+                  <h3>Peminjaman Ditolak</h3>
+                  <p>${notification.room_name}, ${notification.borrow_date}, ${notification.start_time} - ${notification.end_time}</p>
+                  <p>Status: <span class="status-rejected">Ditolak</span></p>
+                  ${notification.file
+                                    ? `<a href="${notification.file}" class="btn btn-danger btn-sm ml-0" style="border-radius: 5px;" download>Download Berkas</a>`
+                                    : ""
+                                }
+                `;
+                        }
 
-          })
-          .catch((error) => {
-            console.error("Error fetching notifications:", error);
-          });
-      }
+                        notifContainer.appendChild(notifCard);
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error fetching notifications:", error);
+                });
+        }
 
-      // Call the function to fetch notifications when the page loads
-      window.onload = fetchNotifications;
+        // Fungsi untuk mengambil cookie berdasarkan nama
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(";").shift();
+        }
+
+        // Call the function to fetch notifications when the page loads
+        window.onload = fetchNotifications();
+
+        window.onload = function () {
+            const authButton = document.getElementById("authButton");
+
+            // Periksa keberadaan cookie Authorization
+            if (document.cookie.includes("Authorization")) {
+                authButton.textContent = "Logout"; // Ubah teks menjadi Logout
+                authButton.onclick = function () {
+                    // Hapus cookie Authorization untuk logout
+                    document.cookie = "Authorization=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+                    document.cookie = "Username=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+                    alert("Anda telah berhasil logout.");
+                    window.location.href = "../index.html"; // Arahkan ke halaman utama
+                };
+            } else {
+                authButton.textContent = "Login"; // Tetap Login
+                authButton.onclick = function () {
+                    window.location.href = "login.html"; // Arahkan ke halaman login
+                };
+            }
+        };
     </script>
 </body>
 
